@@ -5,6 +5,7 @@ require("file?name=index.html!./html/index.html");
 require("file?name=favicon.png!./img/favicon.png");
 require("file?name=Boots.svg!./img/Boots.svg");
 require("file?name=Cat.svg!./img/Cat.svg");
+require("file?name=Explosion.svg!./img/Explosion.svg");
 
 require("./css/style.styl");
 
