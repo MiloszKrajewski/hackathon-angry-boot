@@ -1,5 +1,7 @@
-# hackathon-boots-and-cats
+# hackathon-angry-boot
 Boots and cats
+
+Play it: https://dl.dropboxusercontent.com/u/317815/angry-boot/index.html
 
 Includes:
 * Fable
