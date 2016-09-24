@@ -9,20 +9,24 @@
 </head>
 
 <body>
-    <div class="content">
-        <svg width="800" height="600" viewbox="0 0 400 300">
+    <div id="main"></div>
+
+    <!--
+    <svg width="100" height="100">
+        <image width="100" height="100" xlink:href="Boots.svg">
+    </svg>
+    -->
+    <!--
+    <div id="main2" class="content">
+        <svg width="1000" height="600" viewbox="0 0 500 300">
             <defs>
-                <g id="boot">
-                    <image width="100" height="100" xlink:href="Boots.svg">
-                </g>
-                <g id="cat">
-                    <image width="100" height="100" xlink:href="Cat.svg">
-                </g>
+                <g id="boot"><image width="100" height="100" xlink:href="Boots.svg"></g>
+                <g id="cat"><image width="100" height="100" xlink:href="Cat.svg"></g>
             </defs>
-            <rect x="0" y="0" width="800" height="400" fill="yellow" />
+            <rect x="0" y="0" width="800" height="400" fill="#efe" />
             <rect x="0" y="0" width="100" height="100" stroke="blue" fill="none" />
 
-            <g id="main">
+            <g>
                 <g transform="translate(100 100)">
                     <g transform="translate(-5 -5)">
                         <use xlink:href="#boot" transform="scale(0.2) rotate(0 25 25)" />
@@ -37,6 +41,7 @@
             </g>
         </svg>
     </div>
+    -->
     <script src="bundle.js"></script>
 </body>
 
