@@ -13,8 +13,15 @@ open Fable.Helpers.Virtualdom.Html
 open Daedalus.Js
 
 module Main =
-    type Event = | Init | Tick | MouseMove of double*double | MouseClick
-    let scale = (250.0, 150.0)
+    type Event = 
+        | Init | Teleport | Tick 
+        | MouseMove of double*double 
+        | MouseClick
+    
+    let SCALE = (250.0, 150.0)
+    let COUNTDOWN score = 
+        10 + Random.random() * 20 + (20 - score) |> int |> max 10
+    let MAXSTRENGTH = 150.0
 
     type Model = {
         Mouse: double*double
@@ -25,18 +32,36 @@ module Main =
         BootAngle: double
         BootRotation: double
         BootVector: double*double
+        Countdown: int
+        Score: int
     }
+
+    let randomCatLocation () = 
+        let sx, sy = SCALE
+        let x = (sx*0.5) + Random.random() * sx * 0.5
+        let y = (sy*0.1) + Random.random() * sy * 0.8
+        (x, y)
 
     let newModel () = {
         Mouse = (0.0, 0.0)
         Boot = (20.0, 125.0)
         BootMoving = false
-        Cat = (175.0, 125.0)
+        Cat = randomCatLocation ()
         CatDead = false
         BootAngle = 0.0
         BootRotation = 20.0 
         BootVector = (10.0, -10.0)
+        Countdown = COUNTDOWN 0
+        Score = 0
     }
+
+    let refreshModel model =
+        let score = model.Score 
+        { newModel () with
+            Mouse = model.Mouse 
+            Countdown = COUNTDOWN score
+            Score = score 
+        }
 
     let friction = 0.1
     let gravity = 1.0
@@ -55,7 +80,7 @@ module Main =
         { model with
             BootMoving = true
             BootVector = v
-            BootRotation = f / 10.0
+            BootRotation = f / 7.0
         }
 
     let glide model = 
@@ -65,40 +90,62 @@ module Main =
         let dr = model.BootRotation
         let cx, cy = model.Cat
 
-        let hit () = 
+        let hit = 
             let dx = x - cx
             let dy = y - cy
             Math.Sqrt(dx*dx + dy*dy) < 10.0
+        
+        let longDead = model.CatDead || hit
+        let justDead = not model.CatDead && hit
 
         { model with
-            CatDead = model.CatDead || hit ()
+            CatDead = longDead
+            Score = if justDead then model.Score + 1 else model.Score
             Boot = (x + dx, y + dy)
             BootAngle = r + dr |> wrap 360.0
             BootVector = (dx - friction |> max 0.0, dy + gravity) 
-        }      
+        }
+
+    let teleport model =
+        let countdown = model.Countdown - 1
+        if model.CatDead then model
+        elif countdown > 0 then { model with Countdown = countdown }
+        else { model with Cat = randomCatLocation (); Countdown = COUNTDOWN model.Score }
+
+    let normalizeStrength model x y = 
+        let sx, sy = model.Boot
+        let dx, dy = x - sx, y - sy
+        let r = Math.Sqrt(dx*dx + dy*dy)
+        let max = MAXSTRENGTH
+        if r <= max then { model with Mouse = (x, y) }
+        else 
+            let f = r / max
+            let dx, dy = dx / f, dy / f
+            { model with Mouse = (sx + dx, sy + dy) }
 
     let nextModelTick model =
         if model.BootMoving then model |> glide else model
+        |> teleport
 
     let nextModelUI model event = 
         match event with
-        | MouseMove (x, y) -> { model with Mouse = (x, y) }
+        | MouseMove (x, y) -> normalizeStrength model x y
         | MouseClick -> model |> launch
         | _ -> model
 
 
     let nextTick model push = 
-        let _, y = model.Boot
-        let _, c = scale
-        if y > 2.0 * c then 
+        let x, y = model.Boot
+        let W, H = SCALE
+        if y > 1.2 * H || x > 1.2 * W then 
             push Init
         else
-            Browser.window.setTimeout((fun () -> push Tick), 1000.0 / 10.0)
+            Browser.window.setTimeout((fun () -> push Tick), 1000.0 / 20.0)
             |> ignore
 
     let update model event =
         match event with
-        | Init -> newModel(), [nextTick model]
+        | Init -> refreshModel model, [nextTick model]
         | Tick -> nextModelTick model, [nextTick model] 
         | _ -> nextModelUI model event, []
 
@@ -140,7 +187,7 @@ module Main =
                 e "use" [a "href" "#boom"; a "transform" "scale(0.15) translate(-50 -50)"] []
             ]
 
-        let scaleX, scaleY = scale
+        let scaleX, scaleY = SCALE
         
         let aim () = 
             if model.BootMoving then e "g" [] []
@@ -148,6 +195,12 @@ module Main =
                 let sx, sy = model.Boot
                 let ex, ey = model.Mouse
                 e "path" [a "d" (sprintf "M %g %g L %g %g" sx sy ex ey); a "stroke" "yellow"] []
+
+        let score () =
+            e "text" [a "x" "20"; a "y" "20"] [text (string model.Score)] 
+
+        let title () = 
+            e "text" [a "x" "150"; a "y" "20"] [text ("Angry Boot")]
 
         let mouseMove = 
             onMouseMove (fun e ->
@@ -166,10 +219,12 @@ module Main =
                     load "Cat.svg" "cat"
                     load "Explosion.svg" "boom"
                 ]
+                score ()
                 aim ()
                 boot ()
                 cat ()
                 (if model.CatDead then boom () else e "g" [] [])
+                (if model.Score = 0 then title () else e "g" [] [])
             ]
             div [a "id" "overlay"; mouseMove; mouseClick] []
         ]
