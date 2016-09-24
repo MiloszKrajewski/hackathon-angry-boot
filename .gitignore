@@ -1,0 +1,6 @@
+*.log
+*.bak
+python_modules/
+node_modules/
+build/
+out/
