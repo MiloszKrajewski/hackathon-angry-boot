@@ -19,6 +19,7 @@ module Main =
         | MouseClick
     
     let SCALE = (250.0, 150.0)
+    let BOOTXY = (20.0, 125.0)
     let COUNTDOWN score = 
         10 + Random.random() * 20 + (20 - score) |> int |> max 10
     let MAXSTRENGTH = 150.0
@@ -44,7 +45,7 @@ module Main =
 
     let newModel () = {
         Mouse = (0.0, 0.0)
-        Boot = (20.0, 125.0)
+        Boot = BOOTXY
         BootMoving = false
         Cat = randomCatLocation ()
         CatDead = false
@@ -56,9 +57,10 @@ module Main =
     }
 
     let refreshModel model =
+        
         let score = model.Score 
         { newModel () with
-            Mouse = model.Mouse 
+            Mouse = model.Mouse  
             Countdown = COUNTDOWN score
             Score = score 
         }
@@ -108,20 +110,20 @@ module Main =
 
     let teleport model =
         let countdown = model.Countdown - 1
-        if model.CatDead then model
+        if model.CatDead || model.BootMoving then model
         elif countdown > 0 then { model with Countdown = countdown }
         else { model with Cat = randomCatLocation (); Countdown = COUNTDOWN model.Score }
-
-    let normalizeStrength model x y = 
-        let sx, sy = model.Boot
+    
+    let normalizeMouse x y =
+        let sx, sy = BOOTXY
         let dx, dy = x - sx, y - sy
         let r = Math.Sqrt(dx*dx + dy*dy)
         let max = MAXSTRENGTH
-        if r <= max then { model with Mouse = (x, y) }
+        if r <= max then (x, y)
         else 
             let f = r / max
             let dx, dy = dx / f, dy / f
-            { model with Mouse = (sx + dx, sy + dy) }
+            (sx + dx, sy + dy)
 
     let nextModelTick model =
         if model.BootMoving then model |> glide else model
@@ -129,15 +131,14 @@ module Main =
 
     let nextModelUI model event = 
         match event with
-        | MouseMove (x, y) -> normalizeStrength model x y
+        | MouseMove (x, y) -> { model with Mouse = normalizeMouse x y }
         | MouseClick -> model |> launch
         | _ -> model
 
-
     let nextTick model push = 
         let x, y = model.Boot
-        let W, H = SCALE
-        if y > 1.2 * H || x > 1.2 * W then 
+        let w, h = SCALE
+        if y > 2.0 * w || x > 2.0 * h then 
             push Init
         else
             Browser.window.setTimeout((fun () -> push Tick), 1000.0 / 20.0)
