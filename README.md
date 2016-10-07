@@ -1,14 +1,12 @@
 # hackathon-angry-boot
-Boots and cats
+Angry Boot
 
-Play it: https://dl.dropboxusercontent.com/u/317815/angry-boot/index.html
+Play it: https://rawgit.com/MiloszKrajewski/hackathon-angry-boot/master/release/index.html
 
-Includes:
+Built using:
 * Fable
-* Babel (ES2015)
-* TypeScript
-* Bootstrap
-* jQuery (more like a Bootstrap dependency but usable)
-* VirtualDom (+ Fable wrapper)
-* Stylus
+* VirtualDOM
+* SVG
 * Webpack
+
+NOTE: animation frames are actually SVG scenes built with VirtualDOM
